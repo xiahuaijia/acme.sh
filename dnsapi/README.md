@@ -140,7 +140,7 @@ Finally, make the DNS server and update Key available to `acme.sh`
 
 ```
 export NSUPDATE_SERVER="dns.example.com"
-export NSUPDATE_KEY="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa=="
+export NSUPDATE_KEY="/path/to/your/nsupdate.key"
 ```
 
 Ok, let's issue a cert now:
@@ -325,6 +325,8 @@ The `CY_Username`, `CY_Password` and `CY_OTP_Secret` will be saved in `~/.acme.s
 
 ## 17. Use Domain-Offensive/Resellerinterface/Domainrobot API
 
+ATTENTION: You need to be a registered Reseller to be able to use the ResellerInterface. As a normal user you can not use this method.
+
 You will need your login credentials (Partner ID+Password) to the Resellerinterface, and export them before you run `acme.sh`:
 ```
 export DO_PID="KD-1234567"
@@ -354,7 +356,7 @@ acme.sh --issue --dns dns_gandi_livedns -d example.com -d www.example.com
 First, generate a TSIG key for updating the zone.
 
 ```
-keymgr tsig generate acme_key algorithm hmac-sha512 > /etc/knot/acme.key
+keymgr tsig generate -t acme_key hmac-sha512 > /etc/knot/acme.key
 ```
 
 Include this key in your knot configuration file.
@@ -409,10 +411,13 @@ acme.sh --issue --dns dns_dgon -d example.com -d www.example.com
 
 ## 21. Use ClouDNS.net API
 
-You need to set the HTTP API user ID and password credentials. See: https://www.cloudns.net/wiki/article/42/
+You need to set the HTTP API user ID and password credentials. See: https://www.cloudns.net/wiki/article/42/. For security reasons, it's recommended to use a sub user ID that only has access to the necessary zones, as a regular API user has access to your entire account.
 
 ```
-export CLOUDNS_AUTH_ID=XXXXX
+# Use this for a sub auth ID
+export CLOUDNS_SUB_AUTH_ID=XXXXX
+# Use this for a regular auth ID
+#export CLOUDNS_AUTH_ID=XXXXX
 export CLOUDNS_AUTH_PASSWORD="YYYYYYYYY"
 ```
 
@@ -420,23 +425,440 @@ Ok, let's issue a cert now:
 ```
 acme.sh --issue --dns dns_cloudns -d example.com -d www.example.com
 ```
+The `CLOUDNS_AUTH_ID` and `CLOUDNS_AUTH_PASSWORD` will be saved in `~/.acme.sh/account.conf` and will be reused when needed.
 
 ## 22. Use Infoblox API
- 
+
 First you need to create/obtain API credentials on your Infoblox appliance.
- 
+
 ```
 export Infoblox_Creds="username:password"
 export Infoblox_Server="ip or fqdn of infoblox appliance"
 ```
- 
+
 Ok, let's issue a cert now:
 ```
 acme.sh --issue --dns dns_infoblox -d example.com -d www.example.com
 ```
- 
+
 Note: This script will automatically create and delete the ephemeral txt record.
 The `Infoblox_Creds` and `Infoblox_Server` will be saved in `~/.acme.sh/account.conf` and will be reused when needed.
+
+
+## 23. Use VSCALE API
+
+First you need to create/obtain API tokens on your [settings panel](https://vscale.io/panel/settings/tokens/).
+
+```
+VSCALE_API_KEY="sdfsdfsdfljlbjkljlkjsdfoiwje"
+```
+
+Ok, let's issue a cert now:
+```
+acme.sh --issue --dns dns_vscale -d example.com -d www.example.com
+```
+
+##  24. Use Dynu API
+
+First you need to create/obtain API credentials from your Dynu account. See: https://www.dynu.com/resources/api/documentation
+
+```
+export Dynu_ClientId="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+export Dynu_Secret="yyyyyyyyyyyyyyyyyyyyyyyyy"
+```
+
+Ok, let's issue a cert now:
+```
+acme.sh --issue --dns dns_dynu -d example.com -d www.example.com
+```
+
+The `Dynu_ClientId` and `Dynu_Secret` will be saved in `~/.acme.sh/account.conf` and will be reused when needed.
+
+## 25. Use DNSimple API
+
+First you need to login to your DNSimple account and generate a new oauth token.
+
+https://dnsimple.com/a/{your account id}/account/access_tokens
+
+Note that this is an _account_ token and not a user token. The account token is
+needed to infer the `account_id` used in requests. A user token will not be able
+to determine the correct account to use.
+
+```
+export DNSimple_OAUTH_TOKEN="sdfsdfsdfljlbjkljlkjsdfoiwje"
+```
+
+To issue the cert just specify the `dns_dnsimple` API.
+
+```
+acme.sh --issue --dns dns_dnsimple -d example.com
+```
+
+The `DNSimple_OAUTH_TOKEN` will be saved in `~/.acme.sh/account.conf` and will
+be reused when needed.
+
+If you have any issues with this integration please report them to
+https://github.com/pho3nixf1re/acme.sh/issues.
+
+## 26. Use NS1.com API
+
+```
+export NS1_Key="fdmlfsdklmfdkmqsdfk"
+```
+
+Ok, let's issue a cert now:
+```
+acme.sh --issue --dns dns_nsone -d example.com -d www.example.com
+```
+
+## 27. Use DuckDNS.org API
+
+```
+export DuckDNS_Token="aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+```
+
+Please note that since DuckDNS uses StartSSL as their cert provider, thus
+--insecure may need to be used when issuing certs:
+```
+acme.sh --insecure --issue --dns dns_duckdns -d mydomain.duckdns.org
+```
+
+For issues, please report to https://github.com/raidenii/acme.sh/issues.
+
+## 28. Use Name.com API
+
+Create your API token here: https://www.name.com/account/settings/api
+
+Note: `Namecom_Username` should be your Name.com username and not the token name.  If you accidentally run the script with the token name as the username see `~/.acme.sh/account.conf` to fix the issue
+
+```
+export Namecom_Username="testuser"
+export Namecom_Token="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+```
+
+And now you can issue certs with:
+
+```
+acme.sh --issue --dns dns_namecom -d example.com -d www.example.com
+```
+
+For issues, please report to https://github.com/raidenii/acme.sh/issues.
+
+## 29. Use Dyn Managed DNS API to automatically issue cert
+
+First, login to your Dyn Managed DNS account: https://portal.dynect.net/login/
+
+It is recommended to add a new user specific for API access.
+
+The minimum "Zones & Records Permissions" required are:
+```
+RecordAdd
+RecordUpdate
+RecordDelete
+RecordGet
+ZoneGet
+ZoneAddNode
+ZoneRemoveNode
+ZonePublish
+```
+
+Pass the API user credentials to the environment:
+```
+export DYN_Customer="customer"
+export DYN_Username="apiuser"
+export DYN_Password="secret"
+```
+
+Ok, let's issue a cert now:
+```
+acme.sh --issue --dns dns_dyn -d example.com -d www.example.com
+```
+
+The `DYN_Customer`, `DYN_Username` and `DYN_Password` will be saved in `~/.acme.sh/account.conf` and will be reused when needed.
+
+## 30. Use pdd.yandex.ru API
+
+```
+export PDD_Token="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+```
+
+Follow these instructions to get the token for your domain https://tech.yandex.com/domain/doc/concepts/access-docpage/
+```
+acme.sh --issue --dns dns_yandex -d mydomain.example.org
+```
+
+For issues, please report to https://github.com/non7top/acme.sh/issues.
+
+## 31. Use Hurricane Electric
+
+Hurricane Electric (https://dns.he.net/) doesn't have an API so just set your login credentials like so:
+
+```
+export HE_Username="yourusername"
+export HE_Password="password"
+```
+
+Then you can issue your certificate:
+
+```
+acme.sh --issue --dns dns_he -d example.com -d www.example.com
+```
+
+The `HE_Username` and `HE_Password` settings will be saved in `~/.acme.sh/account.conf` and will be reused when needed.
+
+Please report any issues to https://github.com/angel333/acme.sh or to <me@ondrejsimek.com>.
+
+## 32. Use UnoEuro API to automatically issue cert
+
+First you need to login to your UnoEuro account to get your API key.
+
+```
+export UNO_Key="sdfsdfsdfljlbjkljlkjsdfoiwje"
+export UNO_User="UExxxxxx"
+```
+
+Ok, let's issue a cert now:
+```
+acme.sh --issue --dns dns_unoeuro -d example.com -d www.example.com
+```
+
+The `UNO_Key` and `UNO_User` will be saved in `~/.acme.sh/account.conf` and will be reused when needed.
+
+## 33. Use INWX
+
+[INWX](https://www.inwx.de/) offers an [xmlrpc api](https://www.inwx.de/de/help/apidoc)  with your standard login credentials, set them like so:
+
+```
+export INWX_User="yourusername"
+export INWX_Password="password"
+```
+
+Then you can issue your certificates with:
+
+```
+acme.sh --issue --dns dns_inwx -d example.com -d www.example.com
+```
+
+The `INWX_User` and `INWX_Password` settings will be saved in `~/.acme.sh/account.conf` and will be reused when needed.
+
+If your account is secured by mobile tan you have also defined the shared secret.
+
+```
+export INWX_Shared_Secret="shared secret"
+```
+
+You may need to re-enable the mobile tan to gain the shared secret.
+
+## 34. User Servercow API v1
+
+Create a new user from the servercow control center. Don't forget to activate **DNS API** for this user.
+
+```
+export SERVERCOW_API_Username=username
+export SERVERCOW_API_Password=password
+```
+
+Now you cann issue a cert:
+
+```
+acme.sh --issue --dns dns_servercow -d example.com -d www.example.com
+```
+Both, `SERVERCOW_API_Username` and `SERVERCOW_API_Password` will be saved in `~/.acme.sh/account.conf` and will be reused when needed.
+
+## 35. Use Namesilo.com API
+
+You'll need to generate an API key at https://www.namesilo.com/account_api.php
+Optionally you may restrict the access to an IP range there.
+
+```
+export Namesilo_Key="xxxxxxxxxxxxxxxxxxxxxxxx"
+```
+
+And now you can issue certs with:
+
+```
+acme.sh --issue --dns dns_namesilo --dnssleep 900 -d example.com -d www.example.com
+```
+
+## 36. Use autoDNS (InternetX)
+
+[InternetX](https://www.internetx.com/) offers an [xml api](https://help.internetx.com/display/API/AutoDNS+XML-API)  with your standard login credentials, set them like so:
+
+```
+export AUTODNS_USER="yourusername"
+export AUTODNS_PASSWORD="password"
+export AUTODNS_CONTEXT="context"
+```
+
+Then you can issue your certificates with:
+
+```
+acme.sh --issue --dns dns_autodns -d example.com -d www.example.com
+```
+
+The `AUTODNS_USER`, `AUTODNS_PASSWORD` and `AUTODNS_CONTEXT` settings will be saved in `~/.acme.sh/account.conf` and will be reused when needed.
+
+## 37. Use Azure DNS
+
+You have to create a service principal first. See:[How to use Azure DNS](../../../wiki/How-to-use-Azure-DNS)
+
+```
+export AZUREDNS_SUBSCRIPTIONID="12345678-9abc-def0-1234-567890abcdef"
+export AZUREDNS_TENANTID="11111111-2222-3333-4444-555555555555"
+export AZUREDNS_APPID="3b5033b5-7a66-43a5-b3b9-a36b9e7c25ed"
+export AZUREDNS_CLIENTSECRET="1b0224ef-34d4-5af9-110f-77f527d561bd"
+```
+
+Then you can issue your certificates with:
+
+```
+acme.sh --issue --dns dns_azure -d example.com -d www.example.com
+```
+
+`AZUREDNS_SUBSCRIPTIONID`, `AZUREDNS_TENANTID`,`AZUREDNS_APPID` and `AZUREDNS_CLIENTSECRET` settings will be saved in `~/.acme.sh/account.conf` and will be reused when needed.
+
+## 38. Use selectel.com(selectel.ru) domain API to automatically issue cert
+
+First you need to login to your account to get your API key from: https://my.selectel.ru/profile/apikeys.
+
+```sh
+export SL_Key="sdfsdfsdfljlbjkljlkjsdfoiwje"
+
+```
+
+Ok, let's issue a cert now:
+```
+acme.sh --issue --dns dns_selectel -d example.com -d www.example.com
+```
+
+The `SL_Key` will be saved in `~/.acme.sh/account.conf` and will be reused when needed.
+
+## 39. Use zonomi.com domain API to automatically issue cert
+
+First you need to login to your account to find your API key from: http://zonomi.com/app/dns/dyndns.jsp
+
+Your will find your api key in the example urls:
+
+```sh
+https://zonomi.com/app/dns/dyndns.jsp?host=example.com&api_key=1063364558943540954358668888888888
+```
+
+```sh
+export ZM_Key="1063364558943540954358668888888888"
+
+```
+
+Ok, let's issue a cert now:
+```
+acme.sh --issue --dns dns_zonomi -d example.com -d www.example.com
+```
+
+The `ZM_Key` will be saved in `~/.acme.sh/account.conf` and will be reused when needed.
+
+## 40. Use DreamHost DNS API
+
+DNS API keys may be created at https://panel.dreamhost.com/?tree=home.api.
+Ensure the created key has add and remove privelages.
+
+```
+export DH_API_KEY="<api key>"
+acme.sh --issue --dns dns_dreamhost -d example.com -d www.example.com
+```
+
+The 'DH_API_KEY' will be saved in `~/.acme.sh/account.conf` and will
+be reused when needed.
+
+## 41. Use DirectAdmin API
+The DirectAdmin interface has it's own Let's encrypt functionality, but this
+script can be used to generate certificates for names which are not hosted on
+DirectAdmin
+
+User must provide login data and URL to the DirectAdmin incl. port.
+You can create an user which only has access to
+
+- CMD_API_DNS_CONTROL
+- CMD_API_SHOW_DOMAINS
+
+By using the Login Keys function.
+See also https://www.directadmin.com/api.php and https://www.directadmin.com/features.php?id=1298
+
+```
+export DA_Api="https://remoteUser:remotePassword@da.domain.tld:8443"
+export DA_Api_Insecure=1
+```
+Set `DA_Api_Insecure` to 1 for insecure and 0 for secure -> difference is whether ssl cert is checked for validity (0) or whether it is just accepted (1)
+
+Ok, let's issue a cert now:
+```
+acme.sh --issue --dns dns_da -d example.com -d www.example.com
+```
+
+The `DA_Api` and `DA_Api_Insecure` will be saved in `~/.acme.sh/account.conf` and will be reused when needed.
+
+## 42. Use KingHost DNS API
+
+API access must be enabled at https://painel.kinghost.com.br/painel.api.php
+
+```
+export KINGHOST_Username="yourusername"
+export KINGHOST_Password="yourpassword"
+acme.sh --issue --dns dns_kinghost -d example.com -d *.example.com
+```
+
+The `KINGHOST_username` and `KINGHOST_Password` will be saved in `~/.acme.sh/account.conf` and will be reused when needed.
+
+## 43. Use Zilore DNS API
+
+First, get your API key at https://my.zilore.com/account/api
+
+```
+export Zilore_Key="5dcad3a2-36cb-50e8-cb92-000002f9"
+```
+
+Ok, let's issue a cert now:
+```
+acme.sh --issue --dns dns_zilore -d example.com -d *.example.com
+```
+
+The `Zilore_Key` will be saved in `~/.acme.sh/account.conf` and will be reused when needed.
+
+## 44. Use Loopia.se API
+User must provide login credentials to the Loopia API.
+The user needs the following permissions:
+
+- addSubdomain
+- updateZoneRecord
+- getDomains
+- removeSubdomain
+
+Set the login credentials:
+```
+export LOOPIA_User="user@loopiaapi"
+export LOOPIA_Password="password"
+```
+
+And to issue a cert:
+```
+acme.sh --issue --dns dns_loopia -d example.com -d *.example.com
+```
+
+The username and password will be saved in `~/.acme.sh/account.conf` and will be reused when needed.
+## 45. Use ACME DNS API
+
+ACME DNS is a limited DNS server with RESTful HTTP API to handle ACME DNS challenges easily and securely. 
+https://github.com/joohoi/acme-dns
+
+```
+export ACMEDNS_UPDATE_URL="https://auth.acme-dns.io/update"
+export ACMEDNS_USERNAME="<username>"
+export ACMEDNS_PASSWORD="<password>"
+export ACMEDNS_SUBDOMAIN="<subdomain>"
+
+acme.sh --issue --dns dns_acmedns -d example.com -d www.example.com
+```
+
+The credentials will be saved in `~/.acme.sh/account.conf` and will
+be reused when needed.
 
 # Use custom API
 
@@ -454,6 +876,7 @@ acme.sh --issue --dns dns_myapi -d example.com -d www.example.com
 
 For more details, please check our sample script: [dns_myapi.sh](dns_myapi.sh)
 
+See:  https://github.com/Neilpang/acme.sh/wiki/DNS-API-Dev-Guide
 
 # Use lexicon DNS API
 
